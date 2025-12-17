@@ -1,0 +1,14 @@
+# Python virtual environment
+venv/
+
+# Database files
+*.db
+
+# Log files
+*.log
+
+# Cache files
+*.pkl
+
+# IDE files
+.vscode/

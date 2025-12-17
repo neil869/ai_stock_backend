@@ -1,0 +1,14 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+akshare==1.17.91
+lightgbm==4.5.0
+snownlp==0.12.3
+jieba==0.42.1
+baostock==0.8.9
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.2
+python-multipart==0.0.9
+pymysql==1.1.0
+sqlalchemy==2.0.35
+bcrypt==4.1.3

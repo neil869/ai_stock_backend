@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <!-- 背景圆形 -->
+  <circle cx="96" cy="96" r="96" fill="#667eea"/>
+  <!-- 上升趋势线 -->
+  <path d="M40 120 L80 80 L120 60 L152 40" stroke="white" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 底部波浪线 -->
+  <path d="M40 140 C60 150, 80 130, 100 140 C120 150, 140 130, 152 140" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 星星装饰 -->
+  <polygon points="96 50, 104 70, 124 70, 108 84, 116 104, 96 90, 76 104, 84 84, 68 70, 88 70" fill="white" opacity="0.9"/>
+</svg>

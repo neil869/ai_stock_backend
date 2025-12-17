@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI股票智能分析系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation;
+        }
+
+        /* 加载动画 - 已移除 */
+        /*
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeOut 3s ease-in-out forwards;
+        }
+
+        .loading-title {
+            color: white;
+            font-size: 32px;
+            font-weight: 600;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-in-out forwards, fadeOutUp 1s ease-in-out 1.5s forwards;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOutUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+        */
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Tab切换样式 */
+        .tab-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Tab内容样式 */
+        .tab-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            padding-bottom: 70px; /* 为底部Tab留出空间 */
+        }
+
+        /* 底部Tab导航 - 微信App风格 */
+        .tab-header {
+            display: flex;
+            border-top: 1px solid #e5e5e5;
+            background: white;
+            box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.06);
+            z-index: 1000;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 6px 0;
+            background: none;
+            border: none;
+            font-size: 10px;
+            font-weight: 400;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            height: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .tab-btn::before {
+            content: attr(data-icon);
+            font-size: 20px;
+        }
+
+        .tab-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        /* 结果展示样式 - iOS风格卡片 */
+        .result {
+            margin-top: 24px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .result h3 {
+            margin-bottom: 16px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .result-item {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-item.reason-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
+            display: block;
+            border-bottom: none;
+        }
+
+        .result-item.reason-section .result-label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .result-item.reason-section .result-value {
+            display: block;
+            font-weight: normal;
+            color: #212529;
+            line-height: 1.6;
+            text-align: left;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-width: 100%;
+            font-size: 15px;
+        }
+
+        .signal-buy {
+            color: #28a745;
+        }
+
+        .signal-sell {
+            color: #dc3545;
+        }
+
+        .signal-hold {
+            color: #ffc107;
+        }
+
+        /* 股票列表样式 */
+        .stock-list {
+            margin-top: 20px;
+        }
+
+        .stock-item {
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .stock-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .stock-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .stock-code {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .stock-board {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .stock-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        /* 回测结果样式 */
+        .backtest-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 错误提示 */
+        .error {
+            color: #dc3545;
+            margin-top: 12px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 移动端优化 - 微信App风格 */
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                height: 100vh;
+                padding-bottom: 0;
+            }
+
+            .tab-header {
+                height: 70px;
+                border-bottom: 1px solid #e0e0e0;
+                background: white;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 100;
+                display: flex;
+                justify-content: space-around;
+                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            }
+
+            .tab-content {
+                padding: 16px;
+                padding-bottom: 90px; /* 为底部Tab留出更多空间 */
+                margin-bottom: 20px;
+            }
+
+            .tab-btn {
+                font-size: 11px;
+                flex: 1;
+            }
+
+            .tab-btn::before {
+                font-size: 24px;
+            }
+
+            .tab-btn.active::after {
+                height: 3px;
+            }
+
+            /* 优化表单和按钮在移动端的显示 */
+            .form-group {
+                margin-bottom: 24px;
+            }
+
+            .form-control {
+                padding: 16px;
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 16px;
+                font-size: 18px;
+            }
+
+            /* 保持结果展示的原有样式 */
+            .result {
+                padding: 20px;
+            }
+
+            .result-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0;
+            }
+
+            /* 优化股票列表在移动端的显示 */
+            .stock-item {
+                padding: 16px;
+            }
+
+            .stock-stats {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+        }
+        
+        /* 平板优化 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                max-width: 90%;
+                margin: 0 auto;
+            }
+            
+            .tab-header {
+                justify-content: space-around;
+            }
+            
+            .tab-btn {
+                flex: 1;
+            }
+        }
+
+        /* 联想搜索样式 */
+        .autocomplete-container {
+            position: relative;
+        }
+
+        .autocomplete-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background-color: #f5f7fa;
+        }
+
+        .autocomplete-item .stock-code {
+            font-weight: bold;
+            color: #667eea;
+            margin-right: 10px;
+        }
+
+        .autocomplete-item .stock-name {
+            color: #666;
+        }
+
+        .autocomplete-item .stock-board {
+            color: #999;
+            font-size: 12px;
+            background-color: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="login-page" style="min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; justify-content: center; align-items: flex-start; padding: 20px; position: relative; overflow-y: auto;">
+        <!-- 背景装饰 -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0;">
+            <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; animation: backgroundMove 20s linear infinite;"></div>
+        </div>
+        
+        <div class="login-container" style="width: 100%; max-width: 420px; padding: 48px 40px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1); text-align: center; position: relative; z-index: 1; border: 1px solid rgba(255, 255, 255, 0.3);">
+            <!-- 系统图标 -->
+            <div style="width: 80px; height: 80px; margin: 0 auto 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4); animation: pulse 2s ease-in-out infinite;">
+                <span style="font-size: 40px; color: white;">📈</span>
+            </div>
+            
+            <div class="header" style="margin-bottom: 40px;">
+                <h1 style="color: #1f2937; margin-bottom: 12px; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">AI股票智能分析系统</h1>
+                <p style="color: #6b7280; margin-bottom: 0; font-size: 16px; line-height: 1.5;">个股预测、市场扫描、策略回测</p>
+            </div>
+            
+            <form id="login-form" style="text-align: left;">
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label for="username" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">邮箱</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 18px;">📧</span>
+                        <input type="email" id="username" class="form-control" placeholder="请输入邮箱" style="width: 100%; padding: 16px 16px 16px 48px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; background: #f9fafb; color: #111827;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 32px;">
+                    <label for="password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">密码</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 18px;">🔒</span>
+                        <input type="password" id="password" class="form-control" placeholder="请输入密码" style="width: 100%; padding: 16px 16px 16px 48px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; background: #f9fafb; color: #111827;">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 32px;">
+                    <label style="display: flex; align-items: center; cursor: pointer; font-size: 14px; color: #6b7280;">
+                        <input type="checkbox" id="remember-me" style="margin-right: 8px; width: 16px; height: 16px; accent-color: #667eea; cursor: pointer;">
+                        <span>记住密码</span>
+                    </label>
+                </div>
+                
+                <button id="login-btn" class="btn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3); letter-spacing: 0.5px; text-transform: uppercase;">登录</button>
+                <div id="login-error" class="error" style="color: #dc3545; margin-bottom: 20px; font-size: 14px; text-align: center; opacity: 0; transition: opacity 0.3s ease;"></div>
+            </form>
+            
+            <div class="register-link" style="font-size: 16px; color: #6b7280; text-align: center;">
+                还没有账号？ <button id="show-register-btn" class="toggle-btn" style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 16px; font-weight: 600; padding: 0; margin-left: 5px; transition: all 0.3s ease; letter-spacing: 0.5px;">立即注册</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册页面 -->
+    <div id="register-page" style="display: none; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); justify-content: center; align-items: flex-start; padding: 20px; position: relative; overflow-y: auto;">
+        <!-- 背景装饰 -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0;">
+            <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; animation: backgroundMove 20s linear infinite;"></div>
+        </div>
+        
+        <div class="login-container" style="width: 100%; max-width: 480px; padding: 48px 40px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1); text-align: center; animation: fadeInUp 0.8s ease-out; position: relative; z-index: 1; border: 1px solid rgba(255, 255, 255, 0.3);">
+            <!-- 系统图标 -->
+            <div style="width: 80px; height: 80px; margin: 0 auto 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4); animation: pulse 2s ease-in-out infinite;">
+                <span style="font-size: 40px; color: white;">📊</span>
+            </div>
+            
+            <div class="header" style="margin-bottom: 40px;">
+                <h1 style="color: #1f2937; margin-bottom: 12px; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">创建新账号</h1>
+                <p style="color: #6b7280; margin-bottom: 0; font-size: 16px; line-height: 1.5;">加入我们，开启AI股票分析之旅</p>
+            </div>
+            
+            <form id="register-form" style="text-align: left;">
+
+                
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label for="reg-email" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">邮箱</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 18px;">📧</span>
+                        <input type="email" id="reg-email" class="form-control" placeholder="请输入邮箱" style="width: 100%; padding: 16px 16px 16px 48px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; background: #f9fafb; color: #111827;">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label for="reg-password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">密码</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 18px;">🔒</span>
+                        <input type="password" id="reg-password" class="form-control" placeholder="请输入密码" style="width: 100%; padding: 16px 16px 16px 48px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; background: #f9fafb; color: #111827;">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 32px;">
+                    <label for="reg-confirm-password" style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">确认密码</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 18px;">✅</span>
+                        <input type="password" id="reg-confirm-password" class="form-control" placeholder="请再次输入密码" style="width: 100%; padding: 16px 16px 16px 48px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 16px; transition: all 0.3s ease; background: #f9fafb; color: #111827;">
+                    </div>
+                </div>
+                
+                <button id="register-btn" class="btn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3); letter-spacing: 0.5px; text-transform: uppercase;">注册</button>
+                <div id="register-error" class="error" style="color: #dc3545; margin-bottom: 20px; font-size: 14px; text-align: center; opacity: 0; transition: opacity 0.3s ease;"></div>
+            </form>
+            
+
+        </div>
+    </div>
+
+    <style>
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideOutLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes backgroundMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3); }
+            50% { box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 表单元素样式 */
+        .form-control {
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+            background: #ffffff;
+        }
+        
+        /* 确保输入框图标在焦点状态下也能正确显示 */
+        .form-group > div {
+            position: relative;
+        }
+        
+        .form-group > div > span {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 18px;
+            z-index: 10;
+            transition: color 0.3s ease;
+        }
+        
+        .form-control:focus + span {
+            color: #667eea;
+        }
+        
+        .form-control::placeholder {
+            color: #9ca3af;
+            transition: color 0.3s ease;
+        }
+        
+        .form-control:focus::placeholder {
+            color: #d1d5db;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            animation: glow 1.5s ease-in-out infinite;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.7;
+            transform: none;
+            cursor: not-allowed;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        /* 切换按钮样式 */
+        .toggle-btn:hover {
+            color: #764ba2;
+            text-decoration: underline;
+            transform: translateY(-1px);
+        }
+        
+        /* 错误提示样式 */
+        .error.shake {
+            animation: shake 0.5s ease-in-out;
+            opacity: 1 !important;
+        }
+        
+        .error.show-error {
+            opacity: 1 !important;
+            transform: translateY(0);
+        }
+        
+        /* 页面切换动画 */
+        .slide-in-left {
+            animation: slideInLeft 0.5s ease-out;
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        .slide-out-left {
+            animation: slideOutLeft 0.3s ease-in;
+        }
+        
+        .slide-out-right {
+            animation: slideOutRight 0.3s ease-in;
+        }
+        
+        /* 淡入淡出动画 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.3s ease-in;
+        }
+        
+        /* 成功动画 */
+        .success {
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        /* 加载动画 */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        .btn.loading {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            #login-page, #register-page {
+                padding: 0 !important;
+                min-height: 100vh;
+                height: 100vh;
+            }
+            
+            .login-container {
+                padding: 32px 24px !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                height: 100%;
+                max-width: 100%;
+                box-shadow: none !important;
+            }
+            
+            h1 {
+                font-size: 24px !important;
+            }
+            
+            .btn {
+                font-size: 16px !important;
+                padding: 14px !important;
+            }
+        }
+    </style>
+
+    <!-- 主应用页面 -->
+    <div id="app-page" class="container" style="display: none;">
+
+        <div class="tab-container">
+            <!-- Tab切换 -->
+            <div class="tab-header">
+                <button class="tab-btn active" data-tab="predict" data-icon="📈">个股预测</button>
+                <button class="tab-btn" data-tab="scan" data-icon="🔍">市场扫描</button>
+                <button class="tab-btn" data-tab="backtest" data-icon="📊">策略回测</button>
+                <button class="tab-btn" data-tab="profile" data-icon="👤">我的</button>
+            </div>
+
+            <!-- Tab内容 -->
+            <div class="tab-content">
+                <!-- 个股预测 -->
+                <div id="predict" class="tab-pane active">
+                    <div class="form-group">
+                        <label for="stock_input">股票代码/名称</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="stock_input" class="form-control" placeholder="例如：600000 或 浦发银行">
+                            <div id="search_results" class="autocomplete-results"></div>
+                        </div>
+                    </div>
+                    <button id="predict-btn" class="btn">开始预测</button>
+                    <div class="loading" id="predict-loading">
+                        <div class="spinner"></div>
+                        <p>正在预测，请稍候...</p>
+                    </div>
+                    <div id="predict-result" class="result" style="display: none;"></div>
+                    <div id="predict-error" class="error"></div>
+                </div>
+
+                <!-- 市场扫描 -->
+                <div id="scan" class="tab-pane">
+                    <div class="form-group">
+                        <label for="scan_min_prob">最小预测概率 (%)</label>
+                        <input type="number" id="scan_min_prob" class="form-control" min="50" max="100" value="55">
+                    </div>
+                    <div class="form-group">
+                        <label for="scan_max_count">返回数量</label>
+                        <input type="number" id="scan_max_count" class="form-control" min="1" max="100" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="scan_board">市场板块</label>
+                        <select id="scan_board" class="form-control">
+                            <option value="全部">全部</option>
+                            <option value="主板">主板</option>
+                            <option value="创业板">创业板</option>
+                            <option value="科创板">科创板</option>
+                            <option value="中小板">中小板</option>
+                        </select>
+                    </div>
+                    <button id="scan-btn" class="btn">开始扫描</button>
+                    <div class="loading" id="scan-loading">
+                        <div class="spinner"></div>
+                        <p>正在扫描市场，请稍候...</p>
+                    </div>
+                    <div id="scan-result" class="result" style="display: none;"></div>
+                    <div id="scan-error" class="error"></div>
+                </div>
+
+                <!-- 策略回测 -->
+                <div id="backtest" class="tab-pane">
+                    <div class="form-group">
+                        <label for="backtest_top_k">每日选股数量</label>
+                        <input type="number" id="backtest_top_k" class="form-control" min="1" max="20" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="backtest_min_prob">最小预测概率 (%)</label>
+                        <input type="number" id="backtest_min_prob" class="form-control" min="50" max="100" value="55">
+                    </div>
+                    <div class="form-group">
+                        <label for="backtest_board">市场板块</label>
+                        <select id="backtest_board" class="form-control">
+                            <option value="全部">全部</option>
+                            <option value="主板">主板</option>
+                            <option value="创业板">创业板</option>
+                            <option value="科创板">科创板</option>
+                            <option value="中小板">中小板</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="backtest_lookback_days">回测天数</label>
+                        <input type="number" id="backtest_lookback_days" class="form-control" min="30" max="365" value="120">
+                    </div>
+                    <button id="backtest-btn" class="btn">开始回测</button>
+                    <div class="loading" id="backtest-loading">
+                        <div class="spinner"></div>
+                        <p>正在回测策略，请稍候...</p>
+                    </div>
+                    <div id="backtest-result" class="result" style="display: none;"></div>
+                    <div id="backtest-error" class="error"></div>
+                </div>
+                <!-- 我的 -->
+                <div id="profile" class="tab-pane">
+                    <div class="profile-container">
+                        <div class="profile-info">
+                            <div id="profile-user-info" style="font-size: 20px; font-weight: bold; margin-bottom: 10px; color: #667eea;"></div>
+                            <div style="color: #718096; margin-bottom: 30px;">AI股票预测系统</div>
+                            <button id="profile-logout-btn" class="btn" style="background-color: #f56565; color: white; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;">退出登录</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .profile-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+        }
+        
+        .profile-info {
+            text-align: center;
+            padding: 40px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+    </style>
+
+    <script>
+        // API基础URL
+        const API_BASE_URL = 'http://192.168.10.113:8001';
+
+        // 页面切换功能
+        document.getElementById('show-register-btn').addEventListener('click', () => {
+            const loginPage = document.getElementById('login-page');
+            const registerPage = document.getElementById('register-page');
+            
+            loginPage.classList.add('slide-out-left');
+            setTimeout(() => {
+                loginPage.style.display = 'none';
+                loginPage.classList.remove('slide-out-left');
+                registerPage.style.display = 'flex';
+                registerPage.classList.add('slide-in-right');
+                setTimeout(() => registerPage.classList.remove('slide-in-right'), 500);
+            }, 300);
+        });
+
+
+
+        // 页面加载时自动填充保存的用户名和密码，并检查登录状态
+        document.addEventListener('DOMContentLoaded', () => {
+            // 填充保存的用户名和密码
+            const savedUser = localStorage.getItem('savedUser');
+            if (savedUser) {
+                try {
+                    const { username, password } = JSON.parse(savedUser);
+                    document.getElementById('username').value = username || '';
+                    document.getElementById('password').value = password || '';
+                    document.getElementById('remember-me').checked = true;
+                } catch (e) {
+                    console.error('解析保存的用户信息失败:', e);
+                }
+            }
+            
+            // 检查登录状态并显示用户信息
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const userInfo = localStorage.getItem('userInfo');
+            if (isLoggedIn === 'true' && userInfo) {
+                try {
+                    const { username } = JSON.parse(userInfo);
+                    // 显示在个人资料页面
+                    const profileUserInfoElement = document.getElementById('profile-user-info');
+                    if (profileUserInfoElement) {
+                        profileUserInfoElement.textContent = `欢迎，${username}`;
+                    }
+                } catch (e) {
+                    console.error('解析用户信息失败:', e);
+                }
+            }
+        });
+
+        // 登录功能
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const rememberMe = document.getElementById('remember-me').checked;
+            const errorDiv = document.getElementById('login-error');
+            const loginBtn = document.getElementById('login-btn');
+            const loginForm = document.querySelector('#login-page form');
+
+            // 清除之前的错误信息
+            errorDiv.textContent = '';
+            errorDiv.classList.remove('show-error');
+
+            // 简单的表单验证
+            if (!username || !password) {
+                errorDiv.textContent = '请输入邮箱和密码';
+                errorDiv.classList.add('show-error');
+                loginForm.classList.add('shake');
+                setTimeout(() => loginForm.classList.remove('shake'), 500);
+                return;
+            }
+            
+            // 邮箱格式验证
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(username)) {
+                errorDiv.textContent = '请输入有效的邮箱地址';
+                errorDiv.classList.add('show-error');
+                loginForm.classList.add('shake');
+                setTimeout(() => loginForm.classList.remove('shake'), 500);
+                return;
+            }
+
+            // 禁用按钮，防止重复提交
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="spinner"></span> 登录中...';
+            loginBtn.classList.add('loading');
+
+            try {
+                // 调用后端登录API
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 登录成功，处理记住密码
+                    if (rememberMe) {
+                        // 保存用户名和密码到localStorage
+                        localStorage.setItem('savedUser', JSON.stringify({ username, password }));
+                    } else {
+                        // 清除保存的密码
+                        localStorage.removeItem('savedUser');
+                    }
+
+                    // 登录成功，添加过渡动画
+                    const loginPage = document.getElementById('login-page');
+                    const appPage = document.getElementById('app-page');
+                    
+                    loginPage.classList.add('fade-out');
+                    setTimeout(() => {
+                        loginPage.style.display = 'none';
+                        appPage.style.display = 'flex';
+                        appPage.classList.add('fade-in');
+                        setTimeout(() => appPage.classList.remove('fade-in'), 500);
+                    }, 300);
+                    
+                    // 保存用户信息到localStorage
+                    localStorage.setItem('userInfo', JSON.stringify(data.user));
+                    localStorage.setItem('isLoggedIn', 'true');
+                    
+                    // 显示用户信息在个人资料页面
+                    const profileUserInfoElement = document.getElementById('profile-user-info');
+                    if (profileUserInfoElement && data.user.username) {
+                        profileUserInfoElement.textContent = `欢迎，${data.user.username}`;
+                    }
+                } else {
+                    // 登录失败，显示错误信息
+                    errorDiv.textContent = data.message || '用户名或密码错误';
+                    errorDiv.classList.add('show-error');
+                    loginForm.classList.add('shake');
+                    setTimeout(() => loginForm.classList.remove('shake'), 500);
+                }
+            } catch (error) {
+                console.error('登录失败:', error);
+                errorDiv.textContent = '登录失败，请检查网络连接后重试';
+                errorDiv.classList.add('show-error');
+                loginForm.classList.add('shake');
+                setTimeout(() => loginForm.classList.remove('shake'), 500);
+            } finally {
+                // 恢复按钮状态
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '登录';
+                loginBtn.classList.remove('loading');
+            }
+        });
+
+        // 退出登录功能
+        document.getElementById('profile-logout-btn').addEventListener('click', () => {
+            // 清除登录状态
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userInfo');
+            
+            // 切换到登录页面
+            const loginPage = document.getElementById('login-page');
+            const appPage = document.getElementById('app-page');
+            
+            appPage.classList.add('fade-out');
+            setTimeout(() => {
+                appPage.style.display = 'none';
+                loginPage.style.display = 'flex';
+                loginPage.classList.add('fade-in');
+                setTimeout(() => loginPage.classList.remove('fade-in'), 500);
+            }, 300);
+        });
+        
+        // 生成随机用户名的函数
+        function generateRandomUsername() {
+            const prefix = '股神_';
+            const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let randomString = '';
+            for (let i = 0; i < 8; i++) {
+                randomString += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return prefix + randomString;
+        }
+
+        // 注册功能
+        document.getElementById('register-btn').addEventListener('click', async () => {
+            // 自动生成随机用户名
+            const username = generateRandomUsername();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+            const confirmPassword = document.getElementById('reg-confirm-password').value.trim();
+            const errorDiv = document.getElementById('register-error');
+            const registerBtn = document.getElementById('register-btn');
+            const registerForm = document.querySelector('#register-page form');
+
+            // 清除之前的错误信息
+            errorDiv.textContent = '';
+            errorDiv.classList.remove('show-error');
+
+            // 表单验证
+            let isValid = true;
+            
+            if (!email || !password || !confirmPassword) {
+                errorDiv.textContent = '请填写所有必填字段';
+                isValid = false;
+            } else if (password !== confirmPassword) {
+                errorDiv.textContent = '两次输入的密码不一致';
+                isValid = false;
+            } else if (password.length < 6) {
+                errorDiv.textContent = '密码长度不能少于6位';
+                isValid = false;
+            } else {
+                // 邮箱格式验证
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    errorDiv.textContent = '请输入有效的邮箱地址';
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) {
+                errorDiv.classList.add('show-error');
+                registerForm.classList.add('shake');
+                setTimeout(() => registerForm.classList.remove('shake'), 500);
+                return;
+            }
+
+            // 禁用按钮，防止重复提交
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<span class="spinner"></span> 注册中...';
+            registerBtn.classList.add('loading');
+
+            try {
+                // 调用后端注册API
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, email, password }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 注册成功，显示成功信息并切换到登录页面
+                    const registerPage = document.getElementById('register-page');
+                    const loginPage = document.getElementById('login-page');
+                    
+                    // 显示成功动画
+                    registerPage.classList.add('success');
+                    setTimeout(() => {
+                        // 清空注册表单
+                        document.getElementById('reg-email').value = '';
+                        document.getElementById('reg-password').value = '';
+                        document.getElementById('reg-confirm-password').value = '';
+                        
+                        // 切换页面
+                        registerPage.classList.remove('success');
+                        registerPage.style.display = 'none';
+                        loginPage.style.display = 'flex';
+                    }, 1000);
+                } else {
+                    // 注册失败，显示错误信息
+                    errorDiv.textContent = data.message || '注册失败，请稍后重试';
+                    errorDiv.classList.add('show-error');
+                    registerForm.classList.add('shake');
+                    setTimeout(() => registerForm.classList.remove('shake'), 500);
+                }
+            } catch (error) {
+                console.error('注册失败:', error);
+                errorDiv.textContent = '注册失败，请检查网络连接后重试';
+                errorDiv.classList.add('show-error');
+                registerForm.classList.add('shake');
+                setTimeout(() => registerForm.classList.remove('shake'), 500);
+            } finally {
+                // 恢复按钮状态
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '注册';
+                registerBtn.classList.remove('loading');
+            }
+        });
+
+        // 回车键登录
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('login-btn').click();
+            }
+        });
+
+        // 回车键注册
+        document.getElementById('reg-confirm-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('register-btn').click();
+            }
+        });
+
+        // Tab切换功能
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 移除所有active类
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                
+                // 添加active类
+                btn.classList.add('active');
+                const tabId = btn.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // 个股预测功能
+        // 联想搜索功能实现
+        const stockInput = document.getElementById('stock_input');
+        const searchResults = document.getElementById('search_results');
+        let selectedStock = null;
+
+        // 延迟搜索函数
+        let searchTimeout;
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const keyword = stockInput.value.trim();
+                if (keyword.length < 1) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/stocks?q=${encodeURIComponent(keyword)}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        renderSearchResults(data.stocks);
+                    }
+                } catch (error) {
+                    console.error('搜索失败:', error);
+                }
+            }, 300);
+        }
+
+        // 渲染搜索结果
+        function renderSearchResults(stocks) {
+            if (stocks.length === 0) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchResults.innerHTML = '';
+            stocks.forEach(stock => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.innerHTML = `
+                    <div>
+                        <span class="stock-code">${stock.code}</span>
+                        <span class="stock-name">${stock.name}</span>
+                    </div>
+                    <span class="stock-board">${stock.board}</span>
+                `;
+                item.addEventListener('click', () => {
+                    selectStock(stock);
+                });
+                searchResults.appendChild(item);
+            });
+
+            searchResults.style.display = 'block';
+        }
+
+        // 选择股票
+        function selectStock(stock) {
+            selectedStock = stock;
+            stockInput.value = `${stock.code} ${stock.name}`;
+            searchResults.style.display = 'none';
+        }
+
+        // 输入框事件监听
+        stockInput.addEventListener('input', debounceSearch);
+        stockInput.addEventListener('focus', debounceSearch);
+
+        // 点击外部关闭搜索结果
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.autocomplete-container')) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // 预测按钮事件监听
+        document.getElementById('predict-btn').addEventListener('click', async () => {
+            const inputValue = stockInput.value.trim();
+            const loading = document.getElementById('predict-loading');
+            const resultDiv = document.getElementById('predict-result');
+            const errorDiv = document.getElementById('predict-error');
+
+            // 表单验证
+            if (!inputValue) {
+                errorDiv.textContent = '请输入股票代码或股票名称';
+                return;
+            }
+
+            errorDiv.textContent = '';
+            loading.classList.add('active');
+            resultDiv.style.display = 'none';
+
+            try {
+                // 确定请求参数
+                let requestParams = {};
+                if (selectedStock) {
+                    // 如果已经选择了股票，使用选择的股票代码
+                    requestParams.stock_code = selectedStock.code;
+                } else {
+                    // 否则根据输入内容判断是股票代码还是名称
+                    const firstPart = inputValue.split(' ')[0];
+                    if (/^\d{6}$/.test(firstPart)) {
+                        // 如果是6位数字，认为是股票代码
+                        requestParams.stock_code = firstPart;
+                    } else {
+                        // 否则认为是股票名称
+                        requestParams.name = inputValue;
+                    }
+                }
+
+                // 发起网络请求
+                const response = await fetch(`${API_BASE_URL}/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestParams)
+                });
+
+                if (!response.ok) {
+                    throw new Error('预测失败，请检查输入或稍后重试');
+                }
+
+                const result = await response.json();
+                
+                // 渲染结果
+                resultDiv.innerHTML = `
+                    <h3>预测结果</h3>
+                    <div class="result-item">
+                        <span class="result-label">股票名称</span>
+                        <span class="result-value">${result.name}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">股票代码</span>
+                        <span class="result-value">${result.stock_code}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">市场板块</span>
+                        <span class="result-value">${result.board}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">当前价格</span>
+                        <span class="result-value">${result.price.toFixed(2)}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">预测信号</span>
+                        <span class="result-value signal-${result.signal.toLowerCase()}">${result.signal}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">预测概率</span>
+                        <span class="result-value">${result.prob.toFixed(1)}%</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">情感分析</span>
+                        <span class="result-value">${result.sentiment_label} (${result.sentiment_score.toFixed(2)})</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">RSI指标</span>
+                        <span class="result-value">${result.rsi.toFixed(2)}</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">5日回撤</span>
+                        <span class="result-value">${result.drawdown_5d.toFixed(2)}%</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">预测日期</span>
+                        <span class="result-value">${result.date}</span>
+                    </div>
+                    <div class="result-item reason-section">
+                        <span class="result-value">${result.reason || '暂无预测理由'}</span>
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            } finally {
+                loading.classList.remove('active');
+            }
+        });
+
+        // 市场扫描功能
+        document.getElementById('scan-btn').addEventListener('click', async () => {
+            const minProb = document.getElementById('scan_min_prob').value;
+            const maxCount = document.getElementById('scan_max_count').value;
+            const board = document.getElementById('scan_board').value;
+            const loading = document.getElementById('scan-loading');
+            const resultDiv = document.getElementById('scan-result');
+            const errorDiv = document.getElementById('scan-error');
+
+            errorDiv.textContent = '';
+            loading.classList.add('active');
+            resultDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/scan`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        min_prob: parseFloat(minProb),
+                        max_count: parseInt(maxCount),
+                        board: board
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('扫描失败，请稍后重试');
+                }
+
+                const result = await response.json();
+                
+                // 渲染结果
+                if (result.stocks && result.stocks.length > 0) {
+                    resultDiv.innerHTML = `
+                        <h3>扫描结果 (共${result.stocks.length}只股票)</h3>
+                        <div class="stock-list">
+                            ${result.stocks.map(stock => `
+                                <div class="stock-item">
+                                    <div class="stock-header">
+                                        <div>
+                                            <div class="stock-name">${stock.name}</div>
+                                            <div class="stock-code">${stock.stock_code}</div>
+                                        </div>
+                                        <div class="stock-board">${stock.board}</div>
+                                    </div>
+                                    <div class="stock-stats">
+                                        <div>信号: <span class="signal-${stock.signal.toLowerCase()}">${stock.signal}</span></div>
+                                        <div>概率: ${stock.prob.toFixed(1)}%</div>
+                                        <div>价格: ${stock.price.toFixed(2)}</div>
+                                        <div>情感: ${stock.sentiment_label}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>扫描结果</h3>
+                        <p style="text-align: center; color: #666;">没有找到符合条件的股票</p>
+                    `;
+                }
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            } finally {
+                loading.classList.remove('active');
+            }
+        });
+
+        // 策略回测功能
+        document.getElementById('backtest-btn').addEventListener('click', async () => {
+            const topK = document.getElementById('backtest_top_k').value;
+            const minProb = document.getElementById('backtest_min_prob').value;
+            const board = document.getElementById('backtest_board').value;
+            const lookbackDays = document.getElementById('backtest_lookback_days').value;
+            const loading = document.getElementById('backtest-loading');
+            const resultDiv = document.getElementById('backtest-result');
+            const errorDiv = document.getElementById('backtest-error');
+
+            errorDiv.textContent = '';
+            loading.classList.add('active');
+            resultDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/backtest`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        top_k: parseInt(topK),
+                        min_prob: parseFloat(minProb),
+                        board: board,
+                        lookback_days: parseInt(lookbackDays)
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('回测失败，请稍后重试');
+                }
+
+                const result = await response.json();
+                
+                // 渲染结果
+                resultDiv.innerHTML = `
+                    <h3>回测结果</h3>
+                    <div class="backtest-stats">
+                        <div class="stat-card">
+                            <div class="stat-value">${result.total_return.toFixed(2)}%</div>
+                            <div class="stat-label">总收益率</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${result.annualized_return.toFixed(2)}%</div>
+                            <div class="stat-label">年化收益率</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${result.sharpe.toFixed(2)}</div>
+                            <div class="stat-label">夏普比率</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${result.max_drawdown.toFixed(2)}%</div>
+                            <div class="stat-label">最大回撤</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${result.win_rate.toFixed(1)}%</div>
+                            <div class="stat-label">胜率</div>
+                        </div>
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            } finally {
+                loading.classList.remove('active');
+            }
+        });
+
+        // 表单输入验证
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('input', () => {
+                const errorDiv = input.closest('.tab-pane').querySelector('.error');
+                if (errorDiv) {
+                    errorDiv.textContent = '';
+                }
+            });
+        });
+    </script>
+
+
+</body>
+</html>

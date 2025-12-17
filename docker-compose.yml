@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  ai-stock-backend:
+    build: .
+    container_name: ai-stock-backend
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./stocks_cache.pkl:/app/stocks_cache.pkl
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

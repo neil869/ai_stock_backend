@@ -1,0 +1,420 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Stock Screener API",
+    "description": "提供个股预测、全市场扫描、策略回测等服务",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "检查API状态",
+        "description": "简单检查API服务器是否正常运行",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predict": {
+      "post": {
+        "summary": "个股预测",
+        "description": "基于AI模型预测指定股票的买卖信号和相关指标",
+        "operationId": "predict_stock_predict_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredictRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scan": {
+      "post": {
+        "summary": "全市场扫描",
+        "description": "扫描A股市场，筛选出符合预测条件的股票",
+        "operationId": "scan_stocks_scan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backtest": {
+      "post": {
+        "summary": "策略回测",
+        "description": "回测AI选股策略的历史表现",
+        "operationId": "run_backtest_backtest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BacktestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BacktestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BacktestRequest": {
+        "properties": {
+          "top_k": {
+            "type": "integer",
+            "title": "Top K",
+            "description": "每天选择的股票数量",
+            "default": 5
+          },
+          "min_prob": {
+            "type": "number",
+            "title": "Min Prob",
+            "description": "最小预测概率阈值",
+            "default": 55.0
+          },
+          "board": {
+            "type": "string",
+            "title": "Board",
+            "description": "市场板块筛选",
+            "default": "全部"
+          },
+          "lookback_days": {
+            "type": "integer",
+            "title": "Lookback Days",
+            "description": "回测的历史天数",
+            "default": 120
+          }
+        },
+        "type": "object",
+        "title": "BacktestRequest",
+        "description": "策略回测请求模型",
+        "example": {
+          "board": "创业板",
+          "lookback_days": 60,
+          "min_prob": 58.0,
+          "top_k": 5
+        }
+      },
+      "BacktestResponse": {
+        "properties": {
+          "total_return": {
+            "type": "number",
+            "title": "Total Return",
+            "description": "总收益率"
+          },
+          "annualized_return": {
+            "type": "number",
+            "title": "Annualized Return",
+            "description": "年化收益率"
+          },
+          "sharpe": {
+            "type": "number",
+            "title": "Sharpe",
+            "description": "夏普比率"
+          },
+          "max_drawdown": {
+            "type": "number",
+            "title": "Max Drawdown",
+            "description": "最大回撤"
+          },
+          "win_rate": {
+            "type": "number",
+            "title": "Win Rate",
+            "description": "胜率"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_return",
+          "annualized_return",
+          "sharpe",
+          "max_drawdown",
+          "win_rate"
+        ],
+        "title": "BacktestResponse",
+        "description": "策略回测响应模型"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PredictRequest": {
+        "properties": {
+          "stock_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Code",
+            "description": "股票代码（6位数字，与name二选一）"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "股票名称（与stock_code二选一）"
+          }
+        },
+        "type": "object",
+        "title": "PredictRequest",
+        "description": "个股预测请求模型",
+        "example": {
+          "name": "浦发银行",
+          "stock_code": "600000"
+        }
+      },
+      "PredictResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "股票名称"
+          },
+          "stock_code": {
+            "type": "string",
+            "title": "Stock Code",
+            "description": "股票代码"
+          },
+          "board": {
+            "type": "string",
+            "title": "Board",
+            "description": "市场板块"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price",
+            "description": "当前价格"
+          },
+          "signal": {
+            "type": "string",
+            "title": "Signal",
+            "description": "预测信号（买入/卖出/持有）"
+          },
+          "prob": {
+            "type": "number",
+            "title": "Prob",
+            "description": "预测概率"
+          },
+          "sentiment_label": {
+            "type": "string",
+            "title": "Sentiment Label",
+            "description": "情感分析标签"
+          },
+          "sentiment_score": {
+            "type": "number",
+            "title": "Sentiment Score",
+            "description": "情感分析分数"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "数据日期"
+          },
+          "rsi": {
+            "type": "number",
+            "title": "Rsi",
+            "description": "相对强弱指标"
+          },
+          "price_above_bb_upper": {
+            "type": "boolean",
+            "title": "Price Above Bb Upper",
+            "description": "价格是否突破布林带上轨"
+          },
+          "mom_weakening": {
+            "type": "boolean",
+            "title": "Mom Weakening",
+            "description": "动量是否减弱"
+          },
+          "drawdown_5d": {
+            "type": "number",
+            "title": "Drawdown 5D",
+            "description": "5日回撤"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "stock_code",
+          "board",
+          "price",
+          "signal",
+          "prob",
+          "sentiment_label",
+          "sentiment_score",
+          "date",
+          "rsi",
+          "price_above_bb_upper",
+          "mom_weakening",
+          "drawdown_5d"
+        ],
+        "title": "PredictResponse",
+        "description": "个股预测响应模型"
+      },
+      "ScanRequest": {
+        "properties": {
+          "min_prob": {
+            "type": "number",
+            "title": "Min Prob",
+            "description": "最小预测概率阈值",
+            "default": 55.0
+          },
+          "max_count": {
+            "type": "integer",
+            "title": "Max Count",
+            "description": "返回结果的最大数量",
+            "default": 20
+          },
+          "board": {
+            "type": "string",
+            "title": "Board",
+            "description": "市场板块筛选",
+            "default": "全部"
+          }
+        },
+        "type": "object",
+        "title": "ScanRequest",
+        "description": "全市场扫描请求模型",
+        "example": {
+          "board": "主板",
+          "max_count": 10,
+          "min_prob": 60.0
+        }
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
