@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  ai-stock-backend:
+    build: .
+    container_name: ai-stock-backend
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./stocks_cache.pkl:/app/stocks_cache.pkl
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PRODUCTION=True
+      - LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # 如果需要添加Nginx作为反向代理，可以取消以下注释
+  # nginx:
+  #   image: nginx:1.25-alpine
+  #   container_name: ai-stock-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/conf.d:/etc/nginx/conf.d
+  #     - ./nginx/ssl:/etc/nginx/ssl
+  #   depends_on:
+  #     - ai-stock-backend
+  #   healthcheck:
+  #     test: ["CMD", "nginx", "-t"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3

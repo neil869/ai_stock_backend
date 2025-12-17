@@ -1,41 +1,38 @@
 #!/bin/bash
 
 # 停止AI股票后端服务的脚本
+APP_NAME="ai-stock-backend"
 
-# 检查服务是否在运行
-PID=$(lsof -i :8001 -t)
+# 检查容器是否在运行
+CONTAINER_ID=$(docker ps -q -f name=${APP_NAME})
 
-if [ -z "$PID" ]; then
-    echo "服务未在运行！"
+if [ -z "$CONTAINER_ID" ]; then
+    echo "容器 ${APP_NAME} 未在运行！"
     exit 0
 fi
 
-echo "正在停止服务 (PID: $PID)..."
+echo "正在停止容器 ${APP_NAME} (ID: $CONTAINER_ID)..."
 
-# 尝试优雅关闭
-kill $PID
+# 停止容器
+docker stop ${APP_NAME}
 
-# 等待服务关闭
-sleep 2
-
-# 检查服务是否已关闭
-PID=$(lsof -i :8001 -t)
-if [ -z "$PID" ]; then
-    echo "服务已成功停止！"
+# 检查容器是否已停止
+CONTAINER_ID=$(docker ps -q -f name=${APP_NAME})
+if [ -z "$CONTAINER_ID" ]; then
+    echo "容器 ${APP_NAME} 已成功停止！"
     exit 0
 else
-    # 如果优雅关闭失败，强制关闭
-    echo "优雅关闭失败，正在强制停止..."
-    kill -9 $PID
+    # 如果停止失败，强制停止
+    echo "停止失败，正在强制停止..."
+    docker kill ${APP_NAME}
     
     # 再次检查
-    sleep 1
-    PID=$(lsof -i :8001 -t)
-    if [ -z "$PID" ]; then
-        echo "服务已强制停止！"
+    CONTAINER_ID=$(docker ps -q -f name=${APP_NAME})
+    if [ -z "$CONTAINER_ID" ]; then
+        echo "容器 ${APP_NAME} 已强制停止！"
         exit 0
     else
-        echo "错误：无法停止服务！"
+        echo "无法停止容器 ${APP_NAME}！"
         exit 1
     fi
 fi
